@@ -1,0 +1,43 @@
+name: Build Java App to EXE
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+
+    - name: Install Apache Ant
+      run: choco install ant -y
+
+    - name: Build JAR using Ant
+      run: ant jar
+
+    - name: Download Launch4j
+      run: |
+        curl -L -o launch4j.zip https://sourceforge.net/projects/launch4j/files/launch4j-3/3.50/launch4j-3.50-win32.zip/download
+        tar -xf launch4j.zip
+
+    - name: Create output directory
+      run: mkdir out
+
+    - name: Create EXE using Launch4j
+      run: launch4j/launch4j.exe launch4j_config.xml
+
+    - name: Upload EXE to GitHub Releases
+      uses: softprops/action-gh-release@v1
+      with:
+        files: out/Payroll_System.exe
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
